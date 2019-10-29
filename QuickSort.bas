@@ -7,7 +7,7 @@ Declare Operator < (ByRef lhs As Point2d, ByRef rhs As Point2d)As Boolean
 
 Operator < (ByRef lhs As Point2d, ByRef rhs As Point2d)As Boolean
 	
-	If lhs.x < rhs.x OrElse lhs.y < rhs.y Then
+	If lhs.x < rhs.x Or (lhs.x = rhs.x and lhs.y < rhs.y) Then
 		Return True
 	End If
 	
@@ -52,10 +52,10 @@ Function FindRightBound( _
 	Dim j As Integer = RightBound + 1
 	
 	Do
-		RightBound -= 1
-	Loop While Pivot < pVector[RightBound]
+		j -= 1
+	Loop While Pivot < pVector[j]
 	
-	Return RightBound
+	Return j
 	
 End Function
 
