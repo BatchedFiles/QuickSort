@@ -7,7 +7,7 @@ Declare Operator < (ByRef lhs As Point2d, ByRef rhs As Point2d)As Boolean
 
 Operator < (ByRef lhs As Point2d, ByRef rhs As Point2d)As Boolean
 	
-	If lhs.x < rhs.x Or (lhs.x = rhs.x and lhs.y < rhs.y) Then
+	If (lhs.x = rhs.x AndAlso lhs.y < rhs.y) OrElse lhs.x < rhs.x Then
 		Return True
 	End If
 	
@@ -15,22 +15,22 @@ Operator < (ByRef lhs As Point2d, ByRef rhs As Point2d)As Boolean
 	
 End Operator
 
-Function GetPivot( _
+Function GetPivotIndex( _
 		ByVal pVector As Point2d Ptr, _
 		ByVal LeftBound As Integer, _
 		ByVal RightBound As Integer _
-	)As Point2d
+	)As Integer
 	
 	Dim PivotIndex As Integer = (LeftBound + RightBound) \ 2
 	
-	Return pVector[PivotIndex]
+	Return PivotIndex
 	
 End Function
 
 Function FindLeftBound( _
 		ByVal pVector As Point2d Ptr, _
 		ByVal LeftBound As Integer, _
-		ByVal Pivot As Point2d _
+		ByRef Pivot As Point2d _
 	)As Integer
 	
 	Dim i As Integer = LeftBound - 1
@@ -46,7 +46,7 @@ End Function
 Function FindRightBound( _
 		ByVal pVector As Point2d Ptr, _
 		ByVal RightBound As Integer, _
-		ByVal Pivot As Point2d _
+		ByRef Pivot As Point2d _
 	)As Integer
 	
 	Dim j As Integer = RightBound + 1
@@ -71,15 +71,15 @@ Sub QuickSort( _
 		Exit Sub
 	End If
 	
-	Dim Pivot As Point2d = GetPivot(pVector, LeftBound, RightBound)
+	Dim PivotIndex As Integer = GetPivotIndex(pVector, LeftBound, RightBound)
 	
 	Dim i As Integer = LeftBound
 	Dim j As Integer = RightBound
 	
 	Do
-		i = FindLeftBound(pVector, i, Pivot)
+		i = FindLeftBound(pVector, i, pVector[PivotIndex])
 		
-		j = FindRightBound(pVector, j, Pivot)
+		j = FindRightBound(pVector, j, pVector[PivotIndex])
 		
 		If i <= j Then
 			Swap pVector[i], pVector[j]
