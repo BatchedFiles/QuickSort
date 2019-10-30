@@ -1,1 +1,1 @@
-"%ProgramFiles%\FreeBASIC\fbc.exe" -O 3 -v QuickSort.bas
+"%ProgramFiles%\FreeBASIC\fbc.exe" -O 3 -R QuickSort.bas
