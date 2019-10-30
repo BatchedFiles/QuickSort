@@ -5,6 +5,8 @@ End Type
 
 Declare Operator < (ByRef lhs As Point2d, ByRef rhs As Point2d)As Boolean
 
+Dim Shared qscount As Integer
+
 Operator < (ByRef lhs As Point2d, ByRef rhs As Point2d)As Boolean
 	
 	If lhs.x < rhs.x Then
@@ -16,6 +18,7 @@ Operator < (ByRef lhs As Point2d, ByRef rhs As Point2d)As Boolean
 			Return True
 		End If
 	End If
+	
 	' If lhs.x < rhs.x OrElse (lhs.x = rhs.x AndAlso lhs.y < rhs.y) Then
 		' Return True
 	' End If
@@ -30,7 +33,7 @@ Function GetPivotIndex( _
 		ByVal RightBound As Integer _
 	)As Integer
 	
-	Dim PivotIndex As Integer = (LeftBound + RightBound) \ 2
+	Dim PivotIndex As Integer = (LeftBound + RightBound + 1) \ 2
 	
 	Return PivotIndex
 	
@@ -79,6 +82,8 @@ Sub QuickSort( _
 	If Size < 2 Then
 		Exit Sub
 	End If
+	
+	qscount = qscount + size
 	
 	Dim PivotIndex As Integer = GetPivotIndex(pVector, LeftBound, RightBound)
 	
@@ -157,6 +162,8 @@ For t As Integer = SORTED_TIME_COUNT_LOWER_BOUND To SORTED_TIME_COUNT_UPPER_BOUN
 	
 	Print "Sorting..."
 	
+	qscount = 0
+	
 	Dim tStart As Double = Timer()
 	
 	QuickSort(@Vector(0), ARRAY_LOWER_BOUND, ARRAY_UPPER_BOUND)
@@ -166,6 +173,7 @@ For t As Integer = SORTED_TIME_COUNT_LOWER_BOUND To SORTED_TIME_COUNT_UPPER_BOUN
 	SortedTimeCount(t) = CInt((tEnd - tStart) * 1000.0 + 0.5)
 	
 	Print "Sort took ";  SortedTimeCount(t); " milliseconds"
+	Print "qscount="; qscount
 	
 Next
 
