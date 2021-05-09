@@ -237,10 +237,10 @@ OBJECTFILES_DEBUG_GUI_MODULES=      $(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_GUI
 OBJECTFILES_RELEASE_CONSOLE_MODULES=$(OBJ_RELEASE_DIR)\EntryPoint$(FILE_SUFFIX_CONSOLE).o $(OBJ_RELEASE_DIR)\QuickSort$(FILE_SUFFIX_CONSOLE).o 
 OBJECTFILES_DEBUG_CONSOLE_MODULES=  $(OBJ_DEBUG_DIR)\EntryPoint$(FILE_SUFFIX_CONSOLE).o   $(OBJ_DEBUG_DIR)\QuickSort$(FILE_SUFFIX_CONSOLE).o   
 
-OBJECTFILES_RELEASE_GUI_RESOURCES=    $(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_BASE).obj
-OBJECTFILES_DEBUG_GUI_RESOURCES=      $(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_BASE).obj
-OBJECTFILES_RELEASE_CONSOLE_RESOURCES=$(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_BASE).obj
-OBJECTFILES_DEBUG_CONSOLE_RESOURCES=  $(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_BASE).obj
+OBJECTFILES_RELEASE_GUI_RESOURCES=    $(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_GUI).obj
+OBJECTFILES_DEBUG_GUI_RESOURCES=      $(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_GUI).obj
+OBJECTFILES_RELEASE_CONSOLE_RESOURCES=$(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_CONSOLE).obj
+OBJECTFILES_DEBUG_CONSOLE_RESOURCES=  $(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_CONSOLE).obj
 
 OBJECTFILES_RELEASE_GUI_BASE=    $(OBJECTFILES_RELEASE_GUI_MODULES)     $(OBJECTFILES_RELEASE_GUI_RESOURCES)     $(OBJ_RELEASE_DIR)\InputDataDialogProc$(FILE_SUFFIX_GUI).o $(OBJ_RELEASE_DIR)\DisplayError$(FILE_SUFFIX_GUI).o     
 OBJECTFILES_DEBUG_GUI_BASE=      $(OBJECTFILES_DEBUG_GUI_MODULES)       $(OBJECTFILES_DEBUG_GUI_RESOURCES)       $(OBJ_DEBUG_DIR)\InputDataDialogProc$(FILE_SUFFIX_GUI).o   $(OBJ_DEBUG_DIR)\DisplayError$(FILE_SUFFIX_GUI).o       
@@ -490,10 +490,18 @@ $(OBJ_DEBUG_DIR)\WriteString$(FILE_SUFFIX_CONSOLE).c:   Modules\WriteString.bas 
 
 
 
-$(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_BASE).obj: Resources.RC Resources.RH QuickSort.exe.manifest
-	$(RESOURCE_COMPILER)          /ni /nu $(ResourceCompilerBitFlag) /o /fo Resources.obj Resources.RC
-	move /y Resources.obj $(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_BASE).obj
+$(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_CONSOLE).obj: Resources.RC Resources.RH QuickSort.exe.manifest
+	$(RESOURCE_COMPILER) /ni /nu $(ResourceCompilerBitFlag) /o /fo Resources.obj Resources.RC
+	move /y Resources.obj $(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_CONSOLE).obj
 
-$(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_BASE).obj: Resources.RC Resources.RH QuickSort.exe.manifest
+$(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_CONSOLE).obj: Resources.RC Resources.RH QuickSort.exe.manifest
 	$(RESOURCE_COMPILER) /d DEBUG /ni /nu $(ResourceCompilerBitFlag) /o /fo Resources.obj Resources.RC
-	move /y Resources.obj $(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_BASE).obj
+	move /y Resources.obj $(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_CONSOLE).obj
+
+$(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_GUI).obj: Resources.RC Resources.RH QuickSort.exe.manifest
+	$(RESOURCE_COMPILER) /d GUI /ni /nu $(ResourceCompilerBitFlag) /o /fo Resources.obj Resources.RC
+	move /y Resources.obj $(OBJ_RELEASE_DIR)\Resources$(FILE_SUFFIX_GUI).obj
+
+$(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_GUI).obj: Resources.RC Resources.RH QuickSort.exe.manifest
+	$(RESOURCE_COMPILER) /d DEBUG /d GUI /ni /nu $(ResourceCompilerBitFlag) /o /fo Resources.obj Resources.RC
+	move /y Resources.obj $(OBJ_DEBUG_DIR)\Resources$(FILE_SUFFIX_GUI).obj
