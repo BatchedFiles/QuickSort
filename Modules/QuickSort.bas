@@ -65,19 +65,18 @@ Function QuickSort( _
 			LocalRightBound -= 1
 		End If
 		
-	' Loop Until LocalLeftBound > LocalRightBound
 	Loop While LocalLeftBound <= LocalRightBound
 	
-	Dim RetVal As Integer = 1
+	Dim QuickSortCount As Integer = 1
 	
 	If LeftBound < LocalRightBound Then
-		RetVal += QuickSort(pVector, LeftBound, LocalRightBound)
+		QuickSortCount += QuickSort(pVector, LeftBound, LocalRightBound)
 	End If
 	
 	If LocalLeftBound < RightBound Then
-		RetVal += QuickSort(pVector, LocalLeftBound, RightBound)
+		QuickSortCount += QuickSort(pVector, LocalLeftBound, RightBound)
 	End If
 	
-	Return RetVal
+	Return QuickSortCount
 	
 End Function
