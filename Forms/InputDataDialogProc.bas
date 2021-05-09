@@ -9,6 +9,12 @@
 #define _i64tot(value, buffer, radix) _i64toa(value, buffer, radix)
 #endif
 
+#define PM_STARTFILLVECTOR WM_USER
+#define PM_ENDFILLVECTOR WM_USER + 1
+#define PM_STARTSORTING WM_USER + 2
+#define PM_ENDSORTING WM_USER + 3
+#define PM_FINISHSORTING WM_USER + 4
+
 Const C_COLUMNS As Integer = 3
 Const SORTED_TIME_COUNT As Integer = 10
 Const VECTOR_CAPACITY As Integer = 50 * 1000 * 1000
@@ -16,6 +22,44 @@ Const VECTOR_CAPACITY As Integer = 50 * 1000 * 1000
 Dim Shared Vector(VECTOR_CAPACITY - 1) As LARGE_DOUBLE
 Dim Shared ElapsedTimes(SORTED_TIME_COUNT - 1) As LARGE_INTEGER
 Dim Shared QuickSorts(SORTED_TIME_COUNT - 1) As Integer
+
+Function SortVector( _
+		ByVal lpParameter As LPVOID _
+	)As DWORD
+	
+	Dim hwndDlg As HWND = Cast(HWND, lpParameter)
+	
+	Dim LeftBound As Integer = LBound(Vector)
+	Dim RightBound As Integer = UBound(Vector)
+	Dim VectorLength As Integer = RightBound - LeftBound + 1
+	
+	For i As Integer = 0 To SORTED_TIME_COUNT - 1
+		
+		srand(0)
+		
+		PostMessage(hwndDlg, PM_STARTFILLVECTOR, 0, NULL)
+		FillVector(@Vector(0), VectorLength)
+		PostMessage(hwndDlg, PM_ENDFILLVECTOR, 0, NULL)
+		
+		Dim StartTime As LARGE_INTEGER = Any
+		QueryPerformanceCounter(@StartTime)
+		
+		PostMessage(hwndDlg, PM_STARTSORTING, i, NULL)
+		QuickSorts(i) = QuickSort(@Vector(0), LeftBound, RightBound)
+		PostMessage(hwndDlg, PM_ENDSORTING, i, NULL)
+		
+		Dim EndTime As LARGE_INTEGER = Any
+		QueryPerformanceCounter(@EndTime)
+		
+		ElapsedTimes(i).QuadPart = EndTime.QuadPart - StartTime.QuadPart
+		
+	Next
+	
+	PostMessage(hwndDlg, PM_FINISHSORTING, 0, NULL)
+	
+	Return 0
+	
+End Function
 
 Sub ListViewAppendRow( _
 		ByVal hListInterest As HWND, _
@@ -26,7 +70,7 @@ Sub ListViewAppendRow( _
 	
 	Dim buf(1023) As TCHAR = Any
 	
-	_i64tot(Index, @buf(0), 10)
+	_i64tot(Index + 1, @buf(0), 10)
 	
 	Dim Item As LVITEM = Any
 	With Item
@@ -56,60 +100,6 @@ Sub ListViewAppendRow( _
 	Item.iSubItem = 2
 	Item.pszText = @buf(0)
 	ListView_SetItem(hListInterest, @Item)
-	
-End Sub
-
-Sub SortVector(ByVal hListInterest As HWND)
-	
-	ListView_DeleteAllItems(hListInterest)
-	
-	Dim LeftBound As Integer = LBound(Vector)
-	Dim RightBound As Integer = UBound(Vector)
-	Dim VectorLength As Integer = RightBound - LeftBound + 1
-	
-	Dim Frequency As LARGE_INTEGER = Any
-	QueryPerformanceFrequency(@Frequency)
-	
-	For i As Integer = 0 To SORTED_TIME_COUNT - 1
-		
-		srand(0)
-		
-		FillVector(@Vector(0), VectorLength)
-		
-		Dim StartTime As LARGE_INTEGER = Any
-		QueryPerformanceCounter(@StartTime)
-		
-		QuickSorts(i) = QuickSort(@Vector(0), LeftBound, RightBound)
-		
-		Dim EndTime As LARGE_INTEGER = Any
-		QueryPerformanceCounter(@EndTime)
-		
-		ElapsedTimes(i).QuadPart = EndTime.QuadPart - StartTime.QuadPart
-		
-		Dim ElapsedMicroSeconds As LARGE_INTEGER = Any
-		ElapsedMicroSeconds.QuadPart = (ElapsedTimes(i).QuadPart * 1000) \ Frequency.QuadPart
-		
-		ListViewAppendRow(hListInterest, i, QuickSorts(i), ElapsedMicroSeconds.QuadPart)
-		
-	Next
-	
-	/'
-	Dim Summ As LARGE_INTEGER = Any
-	Summ.QuadPart = ElapsedTimes(0).QuadPart
-	
-	' Print WStr(!"#\tQuickSorts\tElapsedTimes")
-	' Print 0, QuickSorts(0), ElapsedTimes(0).QuadPart
-	
-	For i As Integer = 1 To SORTED_TIME_COUNT - 1
-		' Print i, QuickSorts(i), ElapsedTimes(i).QuadPart
-		Summ.QuadPart += ElapsedTimes(i).QuadPart
-	Next
-	
-	Dim Average As LARGE_INTEGER = Any
-	Average.QuadPart = Summ.QuadPart \ SORTED_TIME_COUNT
-	
-	' Print WStr("Average"), Average.QuadPart
-	'/
 	
 End Sub
 
@@ -172,8 +162,25 @@ Function InputDataDialogProc( _
 							
 						Case IDOK
 							Dim hListInterest As HWND = GetDlgItem(hwndDlg, IDC_LVW_ELAPSED)
+							ListView_DeleteAllItems(hListInterest)
 							
-							SortVector(hListInterest)
+							Dim hwndOK As HANDLE = GetDlgItem(hwndDlg, IDOK)
+							EnableWindow(hwndOK, False)
+							
+							Dim hwndCANCEL As HANDLE = GetDlgItem(hwndDlg, IDOK)
+							SetFocus(hwndCANCEL)
+							
+							Const DefaultStackSize As DWORD = 0
+							Const CreationFlags As DWORD = 0
+							Dim hThread As HANDLE = CreateThread( _
+								NULL, _
+								DefaultStackSize, _
+								@SortVector, _
+								hwndDlg, _
+								CreationFlags, _
+								NULL _
+							)
+							CloseHandle(hThread)
 							
 					End Select
 					
@@ -184,6 +191,45 @@ Function InputDataDialogProc( _
 					' Ёлемент управлени€
 					
 			End Select
+			
+		' Case PM_FILLVECTOR
+			' Generating
+		' Case PM_STARTSORTING
+			
+		Case PM_ENDSORTING
+			Dim Frequency As LARGE_INTEGER = Any
+			QueryPerformanceFrequency(@Frequency)
+			
+			Dim i As Integer = wParam
+			Dim ElapsedMicroSeconds As LARGE_INTEGER = Any
+			ElapsedMicroSeconds.QuadPart = (ElapsedTimes(i).QuadPart * 1000) \ Frequency.QuadPart
+			
+			Dim hListInterest As HWND = GetDlgItem(hwndDlg, IDC_LVW_ELAPSED)
+			ListViewAppendRow(hListInterest, i, QuickSorts(i), ElapsedMicroSeconds.QuadPart)
+			
+		Case PM_FINISHSORTING
+			Dim Frequency As LARGE_INTEGER = Any
+			QueryPerformanceFrequency(@Frequency)
+			
+			Dim Summ As LARGE_INTEGER = Any
+			Summ.QuadPart = ElapsedTimes(0).QuadPart
+			
+			For i As Integer = 1 To SORTED_TIME_COUNT - 1
+				Summ.QuadPart += ElapsedTimes(i).QuadPart
+			Next
+			
+			Dim Average As LARGE_INTEGER = Any
+			Average.QuadPart = Summ.QuadPart \ SORTED_TIME_COUNT
+			
+			Dim AverageElapsedMicroSeconds As LARGE_INTEGER = Any
+			AverageElapsedMicroSeconds.QuadPart = (Average.QuadPart * 1000) \ Frequency.QuadPart
+			
+			Dim buf(1023) As TCHAR = Any
+			_i64tot(AverageElapsedMicroSeconds.QuadPart, @buf(0), 10)
+			SetDlgItemTextW(hwndDlg, IDC_EDT_AVERAGE, @buf(0))
+			
+			Dim hwndOK As HANDLE = GetDlgItem(hwndDlg, IDOK)
+			EnableWindow(hwndOK, True)
 			
 		Case WM_CLOSE
 			EndDialog(hwndDlg, 0)
