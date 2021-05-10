@@ -204,6 +204,8 @@ Function InputDataDialogProc( _
 							EndDialog(hwndDlg, 0)
 							
 						Case IDOK
+							SetDlgItemText(hwndDlg, IDC_EDT_AVERAGE, NULL)
+
 							Dim hListInterest As HWND = GetDlgItem(hwndDlg, IDC_LVW_ELAPSED)
 							ListView_DeleteAllItems(hListInterest)
 							
@@ -277,7 +279,7 @@ Function InputDataDialogProc( _
 				
 				Dim buf(1023) As TCHAR = Any
 				_i64tot(AverageElapsedMicroSeconds.QuadPart, @buf(0), 10)
-				SetDlgItemTextW(hwndDlg, IDC_EDT_AVERAGE, @buf(0))
+				SetDlgItemText(hwndDlg, IDC_EDT_AVERAGE, @buf(0))
 				
 				CoTaskMemFree(pPerformanceMeasure)
 			End If
