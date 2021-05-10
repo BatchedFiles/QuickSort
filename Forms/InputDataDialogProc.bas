@@ -1,6 +1,7 @@
 #include once "InputDataDialogProc.bi"
 #include once "win\commctrl.bi"
 #include once "win\ole2.bi"
+#include once "IntegerDivision.bi"
 #include once "QuickSort.bi"
 #include once "Resources.RH"
 
@@ -239,44 +240,14 @@ Function InputDataDialogProc( _
 				QueryPerformanceFrequency(@Frequency)
 				
 				Dim ElapsedMicroSeconds As LARGE_INTEGER = Any
-				ElapsedMicroSeconds.QuadPart = (pPerformanceMeasure->Elapsed.QuadPart * 1000) \ Frequency.QuadPart
+				ElapsedMicroSeconds.QuadPart = Integer64Division( _
+					pPerformanceMeasure->Elapsed.QuadPart * 1000, _
+					Frequency.QuadPart _
+				)
 				
 				Dim hListInterest As HWND = GetDlgItem(hwndDlg, IDC_LVW_ELAPSED)
 				ListViewAppendRow(hListInterest, Index, pPerformanceMeasure->QuickSortsCount, ElapsedMicroSeconds.QuadPart)
-				/'
-				Dim buf(1023) As TCHAR = Any
 				
-				_i64tot(Index + 1, @buf(0), 10)
-				
-				Dim Item As LVITEM = Any
-				With Item
-					.mask = LVIF_TEXT ' Or LVIF_STATE Or LVIF_IMAGE
-					.iItem  = Index
-					.iSubItem = 0
-					' .state = 0
-					' .stateMask = 0
-					.pszText = @buf(0)
-					' .cchTextMax = 0
-					' .iImage = i
-					' lParam as LPARAM
-					' iIndent as long
-					' iGroupId as long
-					' cColumns as UINT
-					' puColumns as PUINT
-				End With
-				
-				ListView_InsertItem(hListInterest, @Item)
-				
-				_i64tot(pPerformanceMeasure->QuickSortsCount, @buf(0), 10)
-				Item.iSubItem = 1
-				Item.pszText = @buf(0)
-				ListView_SetItem(hListInterest, @Item)
-				
-				_i64tot(ElapsedMicroSeconds.QuadPart, @buf(0), 10)
-				Item.iSubItem = 2
-				Item.pszText = @buf(0)
-				ListView_SetItem(hListInterest, @Item)
-				'/
 			End If
 			
 		Case PM_FINISHSORTING
@@ -295,10 +266,16 @@ Function InputDataDialogProc( _
 				Next
 				
 				Dim Average As LARGE_INTEGER = Any
-				Average.QuadPart = Summ.QuadPart \ Count
+				Average.QuadPart = Integer64Division( _
+					Summ.QuadPart, _
+					Count _
+				)
 				
 				Dim AverageElapsedMicroSeconds As LARGE_INTEGER = Any
-				AverageElapsedMicroSeconds.QuadPart = (Average.QuadPart * 1000) \ Frequency.QuadPart
+				AverageElapsedMicroSeconds.QuadPart = Integer64Division( _
+					Average.QuadPart * 1000, _
+					Frequency.QuadPart _
+				)
 				
 				Dim buf(1023) As TCHAR = Any
 				_i64tot(AverageElapsedMicroSeconds.QuadPart, @buf(0), 10)

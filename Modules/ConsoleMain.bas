@@ -1,4 +1,5 @@
 #include once "windows.bi"
+#include once "IntegerDivision.bi"
 #include once "QuickSort.bi"
 #include once "Resources.RH"
 #include once "WriteString.bi"
@@ -85,7 +86,10 @@ Function wMain Alias "wMain"()As Long
 			End Scope
 			
 			Dim ElapsedMicroSeconds As LARGE_INTEGER = Any
-			ElapsedMicroSeconds.QuadPart = (ElapsedTimes(i).QuadPart * 1000) \ Frequency.QuadPart
+			ElapsedMicroSeconds.QuadPart = Integer64Division( _
+				ElapsedTimes(i).QuadPart * 1000, _
+				Frequency.QuadPart _
+			)
 			
 			ConsoleAppendRow(i, QuickSorts(i), ElapsedMicroSeconds.QuadPart)
 			
@@ -105,7 +109,10 @@ Function wMain Alias "wMain"()As Long
 		Next
 		
 		Dim Average As LARGE_INTEGER = Any
-		Average.QuadPart = Summ.QuadPart \ SORTED_TIME_COUNT
+		Average.QuadPart = Integer64Division( _
+			Summ.QuadPart, _
+			SORTED_TIME_COUNT _
+		)
 		
 		WriteString(StrPtr(AverageString), Len(AverageString))
 		Scope
