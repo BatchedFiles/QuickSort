@@ -1,5 +1,6 @@
 #include once "InputDataDialogProc.bi"
 #include once "win\commctrl.bi"
+#include once "win\ole2.bi"
 #include once "QuickSort.bi"
 #include once "Resources.RH"
 
@@ -9,19 +10,34 @@
 #define _i64tot(value, buffer, radix) _i64toa(value, buffer, radix)
 #endif
 
+' wParam Ч index
+' lParam Ч NULL
 #define PM_STARTFILLVECTOR WM_USER
+
+' wParam Ч index
+' lParam Ч NULL
 #define PM_ENDFILLVECTOR WM_USER + 1
+
+' wParam Ч index
+' lParam Ч NULL
 #define PM_STARTSORTING WM_USER + 2
+
+' wParam Ч index
+' lParam Ч PerformanceMeasure Ptr
 #define PM_ENDSORTING WM_USER + 3
+
+' wParam Ч length
+' lParam Ч PerformanceMeasure Ptr
 #define PM_FINISHSORTING WM_USER + 4
 
 Const C_COLUMNS As Integer = 3
 Const SORTED_TIME_COUNT As Integer = 10
 Const VECTOR_CAPACITY As Integer = 50 * 1000 * 1000
 
-Dim Shared Vector(VECTOR_CAPACITY - 1) As LARGE_DOUBLE
-Dim Shared ElapsedTimes(SORTED_TIME_COUNT - 1) As LARGE_INTEGER
-Dim Shared QuickSorts(SORTED_TIME_COUNT - 1) As Integer
+Type PerformanceMeasure
+	Dim Elapsed As LARGE_INTEGER
+	Dim QuickSortsCount As Integer
+End Type
 
 Function SortVector( _
 		ByVal lpParameter As LPVOID _
@@ -29,33 +45,61 @@ Function SortVector( _
 	
 	Dim hwndDlg As HWND = Cast(HWND, lpParameter)
 	
-	Dim LeftBound As Integer = LBound(Vector)
-	Dim RightBound As Integer = UBound(Vector)
-	Dim VectorLength As Integer = RightBound - LeftBound + 1
+	Dim pPerformanceMeasure As PerformanceMeasure Ptr = CoTaskMemAlloc( _
+		SORTED_TIME_COUNT * SizeOf(PerformanceMeasure) _
+	)
 	
-	For i As Integer = 0 To SORTED_TIME_COUNT - 1
+	If pPerformanceMeasure <> NULL Then
 		
-		srand(0)
+		Dim pVector As LARGE_DOUBLE Ptr = VirtualAlloc( _
+			NULL, _
+			VECTOR_CAPACITY * SizeOf(LARGE_DOUBLE), _
+			MEM_COMMIT Or MEM_RESERVE, _
+			PAGE_READWRITE _
+		)
 		
-		PostMessage(hwndDlg, PM_STARTFILLVECTOR, 0, NULL)
-		FillVector(@Vector(0), VectorLength)
-		PostMessage(hwndDlg, PM_ENDFILLVECTOR, 0, NULL)
+		' Dim Shared ElapsedTimes(SORTED_TIME_COUNT - 1) As LARGE_INTEGER
+		' Dim Shared QuickSorts(SORTED_TIME_COUNT - 1) As Integer
 		
-		Dim StartTime As LARGE_INTEGER = Any
-		QueryPerformanceCounter(@StartTime)
+		If pVector <> NULL Then
+			
+			For i As Integer = 0 To SORTED_TIME_COUNT - 1
+				
+				srand(0)
+				
+				PostMessage(hwndDlg, PM_STARTFILLVECTOR, i, NULL)
+				Scope
+					FillVector(pVector, VECTOR_CAPACITY)
+				End Scope
+				PostMessage(hwndDlg, PM_ENDFILLVECTOR, i, NULL)
+				
+				PostMessage(hwndDlg, PM_STARTSORTING, i, NULL)
+				Scope
+					Dim StartTime As LARGE_INTEGER = Any
+					QueryPerformanceCounter(@StartTime)
+					
+					pPerformanceMeasure[i].QuickSortsCount = QuickSort(pVector, 0, VECTOR_CAPACITY - 1)
+					
+					Dim EndTime As LARGE_INTEGER = Any
+					QueryPerformanceCounter(@EndTime)
+					
+					pPerformanceMeasure[i].Elapsed.QuadPart = EndTime.QuadPart - StartTime.QuadPart
+					
+				End Scope
+				PostMessage(hwndDlg, PM_ENDSORTING, i, Cast(LPARAM, @pPerformanceMeasure[i]))
+			Next
+			
+			VirtualFree( _
+				pVector, _
+				0, _
+				MEM_RELEASE _
+			)
+			
+		End If
 		
-		PostMessage(hwndDlg, PM_STARTSORTING, i, NULL)
-		QuickSorts(i) = QuickSort(@Vector(0), LeftBound, RightBound)
-		PostMessage(hwndDlg, PM_ENDSORTING, i, NULL)
-		
-		Dim EndTime As LARGE_INTEGER = Any
-		QueryPerformanceCounter(@EndTime)
-		
-		ElapsedTimes(i).QuadPart = EndTime.QuadPart - StartTime.QuadPart
-		
-	Next
+	End If
 	
-	PostMessage(hwndDlg, PM_FINISHSORTING, 0, NULL)
+	PostMessage(hwndDlg, PM_FINISHSORTING, SORTED_TIME_COUNT, Cast(LPARAM, pPerformanceMeasure))
 	
 	Return 0
 	
@@ -184,49 +228,84 @@ Function InputDataDialogProc( _
 							
 					End Select
 					
-				' Case 1
-					' јкселератор
-					
-				' Case Else
-					' Ёлемент управлени€
-					
 			End Select
 			
-		' Case PM_FILLVECTOR
-			' Generating
-		' Case PM_STARTSORTING
-			
 		Case PM_ENDSORTING
-			Dim Frequency As LARGE_INTEGER = Any
-			QueryPerformanceFrequency(@Frequency)
+			Dim Index As Integer = wParam
+			Dim pPerformanceMeasure As PerformanceMeasure Ptr = Cast(PerformanceMeasure Ptr, lParam)
 			
-			Dim i As Integer = wParam
-			Dim ElapsedMicroSeconds As LARGE_INTEGER = Any
-			ElapsedMicroSeconds.QuadPart = (ElapsedTimes(i).QuadPart * 1000) \ Frequency.QuadPart
-			
-			Dim hListInterest As HWND = GetDlgItem(hwndDlg, IDC_LVW_ELAPSED)
-			ListViewAppendRow(hListInterest, i, QuickSorts(i), ElapsedMicroSeconds.QuadPart)
+			If pPerformanceMeasure <> NULL Then
+				Dim Frequency As LARGE_INTEGER = Any
+				QueryPerformanceFrequency(@Frequency)
+				
+				Dim ElapsedMicroSeconds As LARGE_INTEGER = Any
+				ElapsedMicroSeconds.QuadPart = (pPerformanceMeasure->Elapsed.QuadPart * 1000) \ Frequency.QuadPart
+				
+				Dim hListInterest As HWND = GetDlgItem(hwndDlg, IDC_LVW_ELAPSED)
+				ListViewAppendRow(hListInterest, Index, pPerformanceMeasure->QuickSortsCount, ElapsedMicroSeconds.QuadPart)
+				/'
+				Dim buf(1023) As TCHAR = Any
+				
+				_i64tot(Index + 1, @buf(0), 10)
+				
+				Dim Item As LVITEM = Any
+				With Item
+					.mask = LVIF_TEXT ' Or LVIF_STATE Or LVIF_IMAGE
+					.iItem  = Index
+					.iSubItem = 0
+					' .state = 0
+					' .stateMask = 0
+					.pszText = @buf(0)
+					' .cchTextMax = 0
+					' .iImage = i
+					' lParam as LPARAM
+					' iIndent as long
+					' iGroupId as long
+					' cColumns as UINT
+					' puColumns as PUINT
+				End With
+				
+				ListView_InsertItem(hListInterest, @Item)
+				
+				_i64tot(pPerformanceMeasure->QuickSortsCount, @buf(0), 10)
+				Item.iSubItem = 1
+				Item.pszText = @buf(0)
+				ListView_SetItem(hListInterest, @Item)
+				
+				_i64tot(ElapsedMicroSeconds.QuadPart, @buf(0), 10)
+				Item.iSubItem = 2
+				Item.pszText = @buf(0)
+				ListView_SetItem(hListInterest, @Item)
+				'/
+			End If
 			
 		Case PM_FINISHSORTING
-			Dim Frequency As LARGE_INTEGER = Any
-			QueryPerformanceFrequency(@Frequency)
+			Dim Count As Integer = wParam
+			Dim pPerformanceMeasure As PerformanceMeasure Ptr = Cast(PerformanceMeasure Ptr, lParam)
 			
-			Dim Summ As LARGE_INTEGER = Any
-			Summ.QuadPart = ElapsedTimes(0).QuadPart
-			
-			For i As Integer = 1 To SORTED_TIME_COUNT - 1
-				Summ.QuadPart += ElapsedTimes(i).QuadPart
-			Next
-			
-			Dim Average As LARGE_INTEGER = Any
-			Average.QuadPart = Summ.QuadPart \ SORTED_TIME_COUNT
-			
-			Dim AverageElapsedMicroSeconds As LARGE_INTEGER = Any
-			AverageElapsedMicroSeconds.QuadPart = (Average.QuadPart * 1000) \ Frequency.QuadPart
-			
-			Dim buf(1023) As TCHAR = Any
-			_i64tot(AverageElapsedMicroSeconds.QuadPart, @buf(0), 10)
-			SetDlgItemTextW(hwndDlg, IDC_EDT_AVERAGE, @buf(0))
+			If pPerformanceMeasure <> NULL Then
+				Dim Frequency As LARGE_INTEGER = Any
+				QueryPerformanceFrequency(@Frequency)
+				
+				Dim Summ As LARGE_INTEGER = Any
+				Summ.QuadPart = pPerformanceMeasure[0].Elapsed.QuadPart
+				
+				For i As Integer = 1 To Count - 1
+					Summ.QuadPart += pPerformanceMeasure[i].Elapsed.QuadPart
+				Next
+				
+				Dim Average As LARGE_INTEGER = Any
+				Average.QuadPart = Summ.QuadPart \ Count
+				
+				Dim AverageElapsedMicroSeconds As LARGE_INTEGER = Any
+				AverageElapsedMicroSeconds.QuadPart = (Average.QuadPart * 1000) \ Frequency.QuadPart
+				
+				Dim buf(1023) As TCHAR = Any
+				_i64tot(AverageElapsedMicroSeconds.QuadPart, @buf(0), 10)
+				SetDlgItemTextW(hwndDlg, IDC_EDT_AVERAGE, @buf(0))
+				
+				CoTaskMemFree(pPerformanceMeasure)
+			End If
 			
 			Dim hwndOK As HANDLE = GetDlgItem(hwndDlg, IDOK)
 			EnableWindow(hwndOK, True)

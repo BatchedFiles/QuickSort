@@ -205,12 +205,13 @@ FREEBASIC_PARAMETERS_DEBUG_TEST=     $(FREEBASIC_PARAMETERS_DEBUG)   -s console 
 # -Wno-unused-but-set-variable
 # -fwrapv
 # -Wno-format
-#                            -nostdlib -nostdinc -Wall -Wno-unused-label -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-main -Werror-implicit-function-declaration -fno-strict-aliasing -frounding-math -fno-math-errno -fwrapv -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -Wno-format
-GCC_COMPILER_PARAMETERS_BASE=-nostdlib -nostdinc -Wall -Wno-unused-label -Wno-unused-function -Wno-unused-variable                              -Wno-main -Werror-implicit-function-declaration -fno-strict-aliasing -frounding-math -fno-math-errno         -fno-exceptions                                                                -Werror -fno-ident
+# -Wextra
+GCC_COMPILER_WARNINGS=-Wall -Werror -Wno-unused-label -Wno-unused-function -Wno-unused-variable -Wno-main -Werror-implicit-function-declaration
+GCC_COMPILER_PARAMETERS_BASE=$(GCC_COMPILER_WARNINGS) -nostdlib -nostdinc -fno-strict-aliasing -frounding-math -fno-math-errno -fno-exceptions -fno-ident -fdata-sections -ffunction-sections
 GCC_COMPILER_PARAMETERS_RELEASE=$(GCC_COMPILER_PARAMETERS_BASE) $(GCC_ARCHITECTURE) -masm=intel -S -Ofast -mno-stack-arg-probe -fno-stack-check -fno-stack-protector -fno-unwind-tables -fno-asynchronous-unwind-tables
 GCC_COMPILER_PARAMETERS_RELEASE_O0=$(GCC_COMPILER_PARAMETERS_BASE) $(GCC_ARCHITECTURE) -masm=intel -S -O0 -mno-stack-arg-probe -fno-stack-check -fno-stack-protector -fno-unwind-tables -fno-asynchronous-unwind-tables
-GCC_COMPILER_PARAMETERS_DEBUG=  $(GCC_COMPILER_PARAMETERS_BASE) $(GCC_ARCHITECTURE) -masm=intel -S -g -Og
-GCC_COMPILER_PARAMETERS_DEBUG_O0=  $(GCC_COMPILER_PARAMETERS_BASE) $(GCC_ARCHITECTURE) -masm=intel -S -g -O0
+GCC_COMPILER_PARAMETERS_DEBUG=$(GCC_COMPILER_PARAMETERS_BASE) $(GCC_ARCHITECTURE) -masm=intel -S -g -Og                                                            
+GCC_COMPILER_PARAMETERS_DEBUG_O0=$(GCC_COMPILER_PARAMETERS_BASE) $(GCC_ARCHITECTURE) -masm=intel -S -g -O0
 
 GCC_ASSEMBLER_PARAMETERS_RELEASE=$(TARGET_ASSEMBLER_ARCH) --strip-local-absolute
 GCC_ASSEMBLER_PARAMETERS_DEBUG=  $(TARGET_ASSEMBLER_ARCH)
