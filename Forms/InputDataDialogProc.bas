@@ -59,9 +59,6 @@ Function SortVector( _
 			PAGE_READWRITE _
 		)
 		
-		' Dim Shared ElapsedTimes(SORTED_TIME_COUNT - 1) As LARGE_INTEGER
-		' Dim Shared QuickSorts(SORTED_TIME_COUNT - 1) As Integer
-		
 		If pVector <> NULL Then
 			
 			For i As Integer = 0 To SORTED_TIME_COUNT - 1
@@ -88,6 +85,7 @@ Function SortVector( _
 					
 				End Scope
 				PostMessage(hwndDlg, PM_ENDSORTING, i, Cast(LPARAM, @pPerformanceMeasure[i]))
+				
 			Next
 			
 			VirtualFree( _
@@ -209,11 +207,11 @@ Function InputDataDialogProc( _
 							Dim hListInterest As HWND = GetDlgItem(hwndDlg, IDC_LVW_ELAPSED)
 							ListView_DeleteAllItems(hListInterest)
 							
-							Dim hwndOK As HANDLE = GetDlgItem(hwndDlg, IDOK)
-							EnableWindow(hwndOK, False)
-							
 							Dim hwndCANCEL As HANDLE = GetDlgItem(hwndDlg, IDOK)
 							SetFocus(hwndCANCEL)
+							
+							Dim hwndOK As HANDLE = GetDlgItem(hwndDlg, IDOK)
+							EnableWindow(hwndOK, False)
 							
 							Const DefaultStackSize As DWORD = 0
 							Const CreationFlags As DWORD = 0

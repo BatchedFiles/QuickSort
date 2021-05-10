@@ -71,8 +71,8 @@ Function wMain Alias "wMain"()As Long
 				FillVector(pVector, VECTOR_CAPACITY)
 				
 			End Scope
-			WriteString(StrPtr(SortingString), Len(SortingString))
 			
+			WriteString(StrPtr(SortingString), Len(SortingString))
 			Scope
 				Dim StartTime As LARGE_INTEGER = Any
 				QueryPerformanceCounter(@StartTime)
