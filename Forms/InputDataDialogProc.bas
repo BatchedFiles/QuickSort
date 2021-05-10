@@ -36,7 +36,7 @@ Const SORTED_TIME_COUNT As Integer = 10
 Const VECTOR_CAPACITY As Integer = 50 * 1000 * 1000
 
 Type PerformanceMeasure
-	Dim Elapsed As LARGE_INTEGER
+	Dim ElapsedMilliseconds As LARGE_INTEGER
 	Dim QuickSortsCount As Integer
 End Type
 
@@ -60,6 +60,8 @@ Function SortVector( _
 		)
 		
 		If pVector <> NULL Then
+			Dim Frequency As LARGE_INTEGER = Any
+			QueryPerformanceFrequency(@Frequency)
 			
 			For i As Integer = 0 To SORTED_TIME_COUNT - 1
 				
@@ -81,7 +83,11 @@ Function SortVector( _
 					Dim EndTime As LARGE_INTEGER = Any
 					QueryPerformanceCounter(@EndTime)
 					
-					pPerformanceMeasure[i].Elapsed.QuadPart = EndTime.QuadPart - StartTime.QuadPart
+					pPerformanceMeasure[i].ElapsedMilliseconds.QuadPart = Integer64Division( _
+						(EndTime.QuadPart - StartTime.QuadPart) * 1000, _
+						Frequency.QuadPart _
+					)
+					
 					
 				End Scope
 				PostMessage(hwndDlg, PM_ENDSORTING, i, Cast(LPARAM, @pPerformanceMeasure[i]))
@@ -236,17 +242,14 @@ Function InputDataDialogProc( _
 			Dim pPerformanceMeasure As PerformanceMeasure Ptr = Cast(PerformanceMeasure Ptr, lParam)
 			
 			If pPerformanceMeasure <> NULL Then
-				Dim Frequency As LARGE_INTEGER = Any
-				QueryPerformanceFrequency(@Frequency)
-				
-				Dim ElapsedMicroSeconds As LARGE_INTEGER = Any
-				ElapsedMicroSeconds.QuadPart = Integer64Division( _
-					pPerformanceMeasure->Elapsed.QuadPart * 1000, _
-					Frequency.QuadPart _
-				)
 				
 				Dim hListInterest As HWND = GetDlgItem(hwndDlg, IDC_LVW_ELAPSED)
-				ListViewAppendRow(hListInterest, Index, pPerformanceMeasure->QuickSortsCount, ElapsedMicroSeconds.QuadPart)
+				ListViewAppendRow( _
+					hListInterest, _
+					Index, _
+					pPerformanceMeasure->QuickSortsCount, _
+					pPerformanceMeasure->ElapsedMilliseconds.QuadPart _
+				)
 				
 			End If
 			
@@ -255,14 +258,11 @@ Function InputDataDialogProc( _
 			Dim pPerformanceMeasure As PerformanceMeasure Ptr = Cast(PerformanceMeasure Ptr, lParam)
 			
 			If pPerformanceMeasure <> NULL Then
-				Dim Frequency As LARGE_INTEGER = Any
-				QueryPerformanceFrequency(@Frequency)
-				
 				Dim Summ As LARGE_INTEGER = Any
-				Summ.QuadPart = pPerformanceMeasure[0].Elapsed.QuadPart
+				Summ.QuadPart = pPerformanceMeasure[0].ElapsedMilliseconds.QuadPart
 				
 				For i As Integer = 1 To Count - 1
-					Summ.QuadPart += pPerformanceMeasure[i].Elapsed.QuadPart
+					Summ.QuadPart += pPerformanceMeasure[i].ElapsedMilliseconds.QuadPart
 				Next
 				
 				Dim Average As LARGE_INTEGER = Any
@@ -271,14 +271,8 @@ Function InputDataDialogProc( _
 					Count _
 				)
 				
-				Dim AverageElapsedMicroSeconds As LARGE_INTEGER = Any
-				AverageElapsedMicroSeconds.QuadPart = Integer64Division( _
-					Average.QuadPart * 1000, _
-					Frequency.QuadPart _
-				)
-				
 				Dim buf(1023) As TCHAR = Any
-				_i64tot(AverageElapsedMicroSeconds.QuadPart, @buf(0), 10)
+				_i64tot(Average.QuadPart, @buf(0), 10)
 				SetDlgItemText(hwndDlg, IDC_EDT_AVERAGE, @buf(0))
 				
 				CoTaskMemFree(pPerformanceMeasure)

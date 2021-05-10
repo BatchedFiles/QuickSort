@@ -47,7 +47,7 @@ End Sub
 
 Function wMain Alias "wMain"()As Long
 	
-	Dim ElapsedTimes(SORTED_TIME_COUNT - 1) As LARGE_INTEGER = Any
+	Dim ElapsedMilliseconds(SORTED_TIME_COUNT - 1) As LARGE_INTEGER = Any
 	Dim QuickSorts(SORTED_TIME_COUNT - 1) As Integer = Any
 	
 	Dim pVector As LARGE_DOUBLE Ptr = VirtualAlloc( _
@@ -82,16 +82,13 @@ Function wMain Alias "wMain"()As Long
 				Dim EndTime As LARGE_INTEGER = Any
 				QueryPerformanceCounter(@EndTime)
 				
-				ElapsedTimes(i).QuadPart = EndTime.QuadPart - StartTime.QuadPart
+				ElapsedMilliseconds(i).QuadPart = Integer64Division( _
+					(EndTime.QuadPart - StartTime.QuadPart) * 1000, _
+					Frequency.QuadPart _
+				)
 			End Scope
 			
-			Dim ElapsedMicroSeconds As LARGE_INTEGER = Any
-			ElapsedMicroSeconds.QuadPart = Integer64Division( _
-				ElapsedTimes(i).QuadPart * 1000, _
-				Frequency.QuadPart _
-			)
-			
-			ConsoleAppendRow(i, QuickSorts(i), ElapsedMicroSeconds.QuadPart)
+			ConsoleAppendRow(i, QuickSorts(i), ElapsedMilliseconds(i).QuadPart)
 			
 		Next
 		
@@ -102,10 +99,10 @@ Function wMain Alias "wMain"()As Long
 		)
 		
 		Dim Summ As LARGE_INTEGER = Any
-		Summ.QuadPart = ElapsedTimes(0).QuadPart
+		Summ.QuadPart = ElapsedMilliseconds(0).QuadPart
 		
 		For i As Integer = 1 To SORTED_TIME_COUNT - 1
-			Summ.QuadPart += ElapsedTimes(i).QuadPart
+			Summ.QuadPart += ElapsedMilliseconds(i).QuadPart
 		Next
 		
 		Dim Average As LARGE_INTEGER = Any
