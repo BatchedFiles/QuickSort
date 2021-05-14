@@ -41,42 +41,46 @@ Function QuickSort( _
 		Return 0
 	End If
 	
-	Dim PivotIndex As Integer = LeftBound + Size \ 2
-	Dim PivotValue As LARGE_DOUBLE = pVector[PivotIndex]
-	
 	Dim LocalLeftBound As Integer = LeftBound
 	Dim LocalRightBound As Integer = RightBound
 	
-	Do
-		Do While pVector[LocalLeftBound] < PivotValue
-			LocalLeftBound += 1
-		Loop
+	Scope
+		Dim PivotIndex As Integer = LeftBound + Size \ 2
+		Dim PivotValue As LARGE_DOUBLE = pVector[PivotIndex]
 		
-		Do While PivotValue < pVector[LocalRightBound]
-			LocalRightBound -= 1
-		Loop
-		
-		If LocalLeftBound <= LocalRightBound Then
-			Dim tmp As LARGE_DOUBLE = pVector[LocalLeftBound]
-			pVector[LocalLeftBound] = pVector[LocalRightBound]
-			pVector[LocalRightBound] = tmp
+		Do
+			Do While pVector[LocalLeftBound] < PivotValue
+				LocalLeftBound += 1
+			Loop
 			
-			LocalLeftBound += 1
-			LocalRightBound -= 1
+			Do While PivotValue < pVector[LocalRightBound]
+				LocalRightBound -= 1
+			Loop
+			
+			If LocalLeftBound <= LocalRightBound Then
+				Dim tmp As LARGE_DOUBLE = pVector[LocalLeftBound]
+				pVector[LocalLeftBound] = pVector[LocalRightBound]
+				pVector[LocalRightBound] = tmp
+				
+				LocalLeftBound += 1
+				LocalRightBound -= 1
+			End If
+			
+		Loop While LocalLeftBound <= LocalRightBound
+	End Scope
+	
+	Scope
+		Dim QuickSortCount As Integer = 1
+		
+		If LeftBound < LocalRightBound Then
+			QuickSortCount += QuickSort(pVector, LeftBound, LocalRightBound)
 		End If
 		
-	Loop While LocalLeftBound <= LocalRightBound
-	
-	Dim QuickSortCount As Integer = 1
-	
-	If LeftBound < LocalRightBound Then
-		QuickSortCount += QuickSort(pVector, LeftBound, LocalRightBound)
-	End If
-	
-	If LocalLeftBound < RightBound Then
-		QuickSortCount += QuickSort(pVector, LocalLeftBound, RightBound)
-	End If
-	
-	Return QuickSortCount
+		If LocalLeftBound < RightBound Then
+			QuickSortCount += QuickSort(pVector, LocalLeftBound, RightBound)
+		End If
+		
+		Return QuickSortCount
+	End Scope
 	
 End Function
