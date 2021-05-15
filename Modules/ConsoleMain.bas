@@ -21,7 +21,7 @@ Const VECTOR_CAPACITY As Integer = 50 * 1000 * 1000
 
 Sub ConsoleAppendRow( _
 		ByVal Index As Integer, _
-		ByVal Sorts As Integer, _
+		ByVal PartitionsCount As Integer, _
 		ByVal Elapsed As LongInt _
 	)
 	
@@ -29,7 +29,7 @@ Sub ConsoleAppendRow( _
 	_i64tot(Index + 1, @bufIndex(0), 10)
 	
 	Dim bufQuickSorts(1023) As TCHAR = Any
-	_i64tot(Sorts, @bufQuickSorts(0), 10)
+	_i64tot(PartitionsCount, @bufQuickSorts(0), 10)
 	
 	Dim bufQuickElapsedTime(1023) As TCHAR = Any
 	_i64tot(Elapsed, @bufQuickElapsedTime(0), 10)
@@ -48,7 +48,7 @@ End Sub
 Function wMain Alias "wMain"()As Long
 	
 	Dim ElapsedMilliseconds(SORTED_TIME_COUNT - 1) As LARGE_INTEGER = Any
-	Dim QuickSorts(SORTED_TIME_COUNT - 1) As Integer = Any
+	Dim PartitionsCount(SORTED_TIME_COUNT - 1) As Integer = Any
 	
 	Dim pVector As LARGE_DOUBLE Ptr = VirtualAlloc( _
 		NULL, _
@@ -77,7 +77,7 @@ Function wMain Alias "wMain"()As Long
 				Dim StartTime As LARGE_INTEGER = Any
 				QueryPerformanceCounter(@StartTime)
 				
-				QuickSorts(i) = QuickSort(pVector, 0, VECTOR_CAPACITY - 1)
+				PartitionsCount(i) = QuickSort(pVector, 0, VECTOR_CAPACITY - 1)
 				
 				Dim EndTime As LARGE_INTEGER = Any
 				QueryPerformanceCounter(@EndTime)
@@ -88,7 +88,7 @@ Function wMain Alias "wMain"()As Long
 				)
 			End Scope
 			
-			ConsoleAppendRow(i, QuickSorts(i), ElapsedMilliseconds(i).QuadPart)
+			ConsoleAppendRow(i, PartitionsCount(i), ElapsedMilliseconds(i).QuadPart)
 			
 		Next
 		

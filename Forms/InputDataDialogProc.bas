@@ -37,7 +37,7 @@ Const VECTOR_CAPACITY As Integer = 50 * 1000 * 1000
 
 Type PerformanceMeasure
 	Dim ElapsedMilliseconds As LARGE_INTEGER
-	Dim QuickSortsCount As Integer
+	Dim PartitionsCount As Integer
 End Type
 
 Function SortVector( _
@@ -78,7 +78,7 @@ Function SortVector( _
 					Dim StartTime As LARGE_INTEGER = Any
 					QueryPerformanceCounter(@StartTime)
 					
-					pPerformanceMeasure[i].QuickSortsCount = QuickSort(pVector, 0, VECTOR_CAPACITY - 1)
+					pPerformanceMeasure[i].PartitionsCount = QuickSort(pVector, 0, VECTOR_CAPACITY - 1)
 					
 					Dim EndTime As LARGE_INTEGER = Any
 					QueryPerformanceCounter(@EndTime)
@@ -113,7 +113,7 @@ End Function
 Sub ListViewAppendRow( _
 		ByVal hListInterest As HWND, _
 		ByVal Index As Integer, _
-		ByVal Sorts As Integer, _
+		ByVal PartitionsCount As Integer, _
 		ByVal Elapsed As LongInt _
 	)
 	
@@ -140,7 +140,7 @@ Sub ListViewAppendRow( _
 	
 	ListView_InsertItem(hListInterest, @Item)
 	
-	_i64tot(Sorts, @buf(0), 10)
+	_i64tot(PartitionsCount, @buf(0), 10)
 	Item.iSubItem = 1
 	Item.pszText = @buf(0)
 	ListView_SetItem(hListInterest, @Item)
@@ -247,7 +247,7 @@ Function InputDataDialogProc( _
 				ListViewAppendRow( _
 					hListInterest, _
 					Index, _
-					pPerformanceMeasure->QuickSortsCount, _
+					pPerformanceMeasure->PartitionsCount, _
 					pPerformanceMeasure->ElapsedMilliseconds.QuadPart _
 				)
 				
