@@ -45,84 +45,6 @@ Sub FillVector( _
 	
 End Sub
 
-/'
-Function QuickSort( _
-		ByVal pVector As LARGE_DOUBLE Ptr, _
-		ByVal LeftBound As Integer, _
-		ByVal RightBound As Integer _
-	)As Integer
-	
-	Dim Size As Integer = RightBound - LeftBound + 1
-	
-	If Size < 2 Then
-		Return 0
-	End If
-	
-	Dim LocalLeftBound As Integer = LeftBound
-	Dim LocalRightBound As Integer = RightBound
-	
-	Scope
-		Dim PivotIndex As Integer = LeftBound + Size \ 2
-		Dim PivotValue As LARGE_DOUBLE = pVector[PivotIndex]
-		
-		Do
-			Do While pVector[LocalLeftBound] < PivotValue
-				LocalLeftBound += 1
-			Loop
-			
-			Do While PivotValue < pVector[LocalRightBound]
-				LocalRightBound -= 1
-			Loop
-			
-			If LocalLeftBound <= LocalRightBound Then
-				Dim tmp As LARGE_DOUBLE = pVector[LocalLeftBound]
-				pVector[LocalLeftBound] = pVector[LocalRightBound]
-				pVector[LocalRightBound] = tmp
-				
-				LocalLeftBound += 1
-				LocalRightBound -= 1
-			End If
-			
-		Loop While LocalLeftBound <= LocalRightBound
-	End Scope
-	
-	Scope
-		Dim PartitionsCount As Integer = 1
-		
-		If LeftBound < LocalRightBound Then
-			PartitionsCount += QuickSort(pVector, LeftBound, LocalRightBound)
-		End If
-		
-		If LocalLeftBound < RightBound Then
-			PartitionsCount += QuickSort(pVector, LocalLeftBound, RightBound)
-		End If
-		
-		Return PartitionsCount
-	End Scope
-	
-End Function
-'/
-/'
-algorithm quicksort(A, lo, hi) is
-   if lo < hi then
-       p:= partition(A, lo, hi)
-       quicksort(A, lo, p)
-       quicksort(A, p + 1, hi)
-algorithm partition(A, low, high) is
-   pivot:= A[(low + high) / 2]
-   i:= low
-   j:= high
-   loop forever
-       
-       while A[i] < pivot 
-              i:= i + 1
-       while A[j] > pivot
-              j:= j - 1
-       if i >= j then
-           return j
-       swap A[i++] with A[j--]
-'/
-
 Function Partition( _
 		ByVal pVector As LARGE_DOUBLE Ptr, _
 		ByVal LeftBound As Integer, _
@@ -130,17 +52,16 @@ Function Partition( _
 	)As Integer
 	
 	Dim PivotIndex As Integer = (LeftBound + RightBound) \ 2
-	Dim PivotValue As LARGE_DOUBLE = pVector[PivotIndex]
 	
 	Dim i As Integer = LeftBound
 	Dim j As Integer = RightBound
 	
 	Do
-		Do While pVector[i] < PivotValue
+		Do While pVector[i] < pVector[PivotIndex]
 			i += 1
 		Loop
 		
-		Do While pVector[j] > PivotValue
+		Do While pVector[j] > pVector[PivotIndex]
 			j -= 1
 		Loop
 		
@@ -167,11 +88,11 @@ Function QuickSort( _
 	)As Integer
 	
 	If LeftBound < RightBound Then
-		Dim p As Integer = Partition(pVector, LeftBound, RightBound)
+		Dim PartitionIndex As Integer = Partition(pVector, LeftBound, RightBound)
 		
 		Dim PartitionsCount As Integer = 1
-		PartitionsCount += QuickSort(pVector, LeftBound, p)
-		PartitionsCount += QuickSort(pVector, p + 1, RightBound)
+		PartitionsCount += QuickSort(pVector, LeftBound, PartitionIndex)
+		PartitionsCount += QuickSort(pVector, PartitionIndex + 1, RightBound)
 		
 		Return PartitionsCount
 	End If
