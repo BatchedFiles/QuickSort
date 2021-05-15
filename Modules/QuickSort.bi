@@ -8,6 +8,8 @@ End Type
 
 Declare Operator < (ByRef lhs As LARGE_DOUBLE, ByRef rhs As LARGE_DOUBLE)As Boolean
 
+Declare Operator > (ByRef lhs As LARGE_DOUBLE, ByRef rhs As LARGE_DOUBLE)As Boolean
+
 Declare Function QuickSort( _
 	ByVal pVector As LARGE_DOUBLE Ptr, _
 	ByVal LeftBound As Integer, _
