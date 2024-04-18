@@ -1,88 +1,90 @@
-TYPE point2d
-  x AS DOUBLE
-  y AS DOUBLE
-END TYPE
+Type Point2d
+	x As Double
+	y As Double
+End Type
 
-Declare Operator < (ByRef lhs As Point2d, ByRef rhs As Point2d)As Boolean
+Dim Shared qscount As Integer
+Dim Shared Vector(0 To (50000000-1)) As Point2d
 
-Operator < (ByRef lhs As Point2d, ByRef rhs As Point2d)As Boolean
+Private Operator < (ByRef lhs As Point2d, ByRef rhs As Point2d) As Boolean
 
 	If lhs.x < rhs.x Then
 		Return True
 	End If
-	
+
 	If lhs.x = rhs.x Then
 		If lhs.y < rhs.y Then
 			Return True
 		End If
 	End If
-        ' If lhs.x < rhs.x Or (lhs.x = rhs.x and lhs.y < rhs.y) Then
-                ' Return True
-        ' End If
 
-        Return False
+	Return False
 
 End Operator
 
-
-rem 	((a.x < b.x) or ((a.x = b.x) and (a.y < b.y)))
 #macro smaller (a, b) 
-	a< b
+	a < b
 #endmacro
 
-dim shared qscount as integer
+Private Sub QuickSort(byval qs As Point2d Ptr, byval l As Integer, byval r As Integer)
 
-Sub quicksort(byval qs As point2d ptr, byval l As Integer, byval r As Integer)
- 
-    Dim As Integer size = r - l +1
-    If size < 2 Then Exit Sub
-    qscount=qscount+size
-    rem print "l=";l;" r=";r;" ";
-    Dim As Integer i = l, j = r
-    Dim As point2d pivot = qs[l + size \ 2]
-    rem print "pivot index=";(l+size\2);" ";
-    Do
-        While smaller(qs[i],pivot)
-            i += 1
-        Wend
-        While smaller(pivot,qs[j])
-            j -= 1
-        Wend
+	Dim As Integer size = r - l + 1
+	If size < 2 Then
+		Exit Sub
+	End If
 
-	rem print "(";i;",";j;")";
-        If i <= j Then
-            Swap qs[i], qs[j]
-            i += 1
-            j -= 1
-        End If
-    Loop Until i > j
-    rem print
-    If l < j Then quicksort(qs, l, j)
-    If i < r Then quicksort(qs, i, r)
- 
+	qscount = qscount + size
+
+	Dim As Integer i = l, j = r
+	Dim pivot As Point2d = qs[l + size \ 2]
+
+	Do
+		While smaller(qs[i], pivot)
+			i += 1
+		Wend
+		While smaller(pivot, qs[j])
+			j -= 1
+		Wend
+
+		If i <= j Then
+			Swap qs[i], qs[j]
+			i += 1
+			j -= 1
+		End If
+	Loop Until i > j
+
+
+	If l < j Then
+		QuickSort(qs, l, j)
+	End If
+
+	If i < r Then
+		QuickSort(qs, i, r)
+	End If
+
 End Sub
- 
-' ------=< MAIN >=------
- 
-Dim As Long i, t
-Dim shared array(0 To 50000000-1) as point2d
-rem Dim shared array(0 To 20-1) as point2d
-Dim As Long a = LBound(array), b = UBound(array)
-for t=1 to 10 
+
+Dim As Integer a = LBound(Vector), b = UBound(Vector)
+
+For t As Integer = 1 to 10 
+	Print "Generating vector..."
+	
 	Randomize 0
-	Print "  generating.. "
-	For i = a To b 
-	    array(i).x = rnd
-	    array(i).y = rnd
+	qscount = 0
+	
+	For i As Integer = a To b 
+	    Vector(i).x = Rnd()
+	    Vector(i).y = Rnd()
 	Next
 	 
-	print "sorting..."
-	qscount=0
-	Dim As Double start = timer 
-	quicksort(@array(0), a, b)
-	Dim ms As UInteger = Int(1000 * (timer - start) + 0.5)
-	Print "sort took msec: ";  ms
-	Print "qscount=";qscount
-next t
- 
-End
+	print "Sorting..."
+	
+	Dim dStart As Double = Timer()
+	QuickSort(@Vector(0), a, b)
+	Dim dEnd As Double = Timer()
+	
+	Dim Elapsed As Integer = CInt(1000.0 * (dEnd - dStart) + 0.5)
+	
+	Print !"\tsort took msec:", Elapsed
+	Print !"\tqscount="; qscount
+Next
